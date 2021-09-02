@@ -2,7 +2,7 @@
 using Landis.Library.DensityCohorts;
 using Landis.SpatialModeling;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// The library's site variables

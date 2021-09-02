@@ -1,8 +1,7 @@
 ﻿
 using Landis.Core;
-using Landis.Library.SiteHarvest;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// A factory for making instances of cohort cutters (WholeCohortCutter
@@ -23,15 +22,12 @@ namespace Landis.Library.DensityHarvest
                                                  ExtensionType   extensionType)
         {
             ICohortCutter cohortCutter;
-            if (DensityThinning.CohortSelectors.Count == 0)
-                cohortCutter = new WholeCohortCutter(cohortSelector, extensionType);
-            else
-            {
-                cohortCutter = new PartialCohortCutter(cohortSelector,
-                                                       DensityThinning.CohortSelectors,
-                                                       extensionType);
-                DensityThinning.ClearCohortSelectors();
-            }
+
+            cohortCutter = new DensityCohortCutter(cohortSelector,
+                                                    DensityThinning.CohortSelectors,
+                                                    extensionType);
+            DensityThinning.ClearCohortSelectors();
+
             return cohortCutter;
         }
 
@@ -48,15 +44,12 @@ namespace Landis.Library.DensityHarvest
                                                  ExtensionType extensionType)
         {
             ICohortCutter cohortCutter;
-            if (DensityThinning.AdditionalCohortSelectors.Count == 0)
-                cohortCutter = new WholeCohortCutter(cohortSelector, extensionType);
-            else
-            {
-                cohortCutter = new PartialCohortCutter(cohortSelector,
-                                                       DensityThinning.AdditionalCohortSelectors,
-                                                       extensionType);
-                DensityThinning.ClearCohortSelectors();
-            }
+
+            cohortCutter = new DensityCohortCutter(cohortSelector,
+                                                    DensityThinning.AdditionalCohortSelectors,
+                                                    extensionType);
+            DensityThinning.ClearCohortSelectors();
+
             return cohortCutter;
         }
     }

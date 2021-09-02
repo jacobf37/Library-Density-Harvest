@@ -4,33 +4,35 @@ using Landis.Library.SiteHarvest;
 using System.Collections.Generic;
 using System.Text;
 using System;
+using Landis.Library.DensityCohorts;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// Static class for partial thinning.
     /// </summary>
-    public static class DensityThinning
+    public static class ResidualThinning
     {
         /// <summary>
         /// The partial cohort selectors that have been read for each species.
         /// </summary>
-        public static PartialCohortSelectors CohortSelectors { get; private set; }
-        public static PartialCohortSelectors AdditionalCohortSelectors { get; private set; }
-        private static IDictionary<ushort, uint> treeremovals;
+        public static DensityCohortSelectors CohortSelectors { get; private set; }
+        public static DensityCohortSelectors AdditionalCohortSelectors { get; private set; }
+        private static IDictionary<float, Tuple<string, float>> residualBasal;
+        private static string removalOrder;
 
         //---------------------------------------------------------------------
 
-        static DensityThinning()
+        static ResidualThinning()
         {
             // Force the harvest library to register its read method for age
             // ranges.  Then replace it with this project's read method that
             // handles percentages for partial thinning.
             AgeRangeParsing.InitializeClass();
-            InputValues.Register<AgeRange>(DensityThinning.ReadAgeOrRange);
-            treeremovals = new Dictionary<ushort, uint>();
-            CohortSelectors = new PartialCohortSelectors();
-            AdditionalCohortSelectors = new PartialCohortSelectors();
+            InputValues.Register<DiameterRange>(ResidualThinning.ReadDiameterRange);
+            residualBasal = new Dictionary<float, Tuple<string, float>>();
+            CohortSelectors = new DensityCohortSelectors();
+            AdditionalCohortSelectors = new DensityCohortSelectors();
         }
 
         //---------------------------------------------------------------------
@@ -62,6 +64,20 @@ namespace Landis.Library.DensityHarvest
         }
 
         //---------------------------------------------------------------------
+        private class ThinningDistributeSelection
+        {
+            //Names for each acceptable thinning distribution method
+            public const string FromAbove = "A";    //Thinning from above (starting with largest cohorts first)
+            public const string FromBelow = "B";    //Thinning from below (starting with smallest cohorts first)
+            public const string Distributed = "D";  //Distributed across diameters
+            
+        }
+
+        //---------------------------------------------------------------------
+
+
+
+        //---------------------------------------------------------------------
 
         /// <summary>
         /// Reads number of trees for partial thinning of a cohort age.
@@ -69,8 +85,9 @@ namespace Landis.Library.DensityHarvest
         /// <remarks>
         /// The number is bracketed by parentheses.
         /// </remarks>
-        public static InputValue<uint> ReadTreeRemoval(StringReader reader)
+        public static InputValue<Tuple<string, float>> ReadResidual(StringReader reader)
         {
+
             TextReader.SkipWhitespace(reader);
             //index = reader.Index;
 
@@ -94,10 +111,22 @@ namespace Landis.Library.DensityHarvest
                 throw MakeInputValueException(valueAsStr.ToString(),
                                               "No value after \"(\"");
             valueAsStr.Append(word);
-            uint removeTrees;
+
+            int delimiterIndex = word.IndexOf('-');
+
+            string distributorStr = word.Substring(0, delimiterIndex);
+            string residualStr = word.Substring(delimiterIndex + 1);
+
+            if (distributorStr != "A|B|D")
+            {
+                throw MakeInputValueException(valueAsStr.ToString(),
+                                              string.Format("Unknown distributor value - \"{0}\" ", distributorStr));
+            }
+
+            float residual;
             try
             {
-                removeTrees = (uint)Int32.Parse(word);
+                residual = float.Parse(residualStr);
             }
             catch (System.FormatException exc)
             {
@@ -105,9 +134,9 @@ namespace Landis.Library.DensityHarvest
                                               exc.Message);
             }
 
-            if (removeTrees < 0.0 || removeTrees > 500000)
+            if (residual < 0.0 || residual > 500000)
                 throw MakeInputValueException(valueAsStr.ToString(),
-                                              string.Format("{0} is not between 0 and 500,000", removeTrees));
+                                              string.Format("{0} is not between 0 and 500,000", residual));
 
             //  Read whitespace and ')'
             valueAsStr.Append(ReadWhitespace(reader));
@@ -121,73 +150,16 @@ namespace Landis.Library.DensityHarvest
                                               string.Format("Value ends with \"{0}\" instead of \")\"", ch));
 
 
-            return new InputValue<uint>(removeTrees, "Number of Trees");
+            var outResidual = new Tuple<string, float>(ThinningDistributeSelection.FromAbove, residual);
+
+
+
+
+            return new InputValue<Tuple<string, float>>(outResidual, "Number of Trees");
         }
         //---------------------------------------------------------------------
 
         //---------------------------------------------------------------------
-
-        /// <summary>
-        /// Reads a percentage for partial thinning of a cohort age or age
-        /// range.
-        /// </summary>
-        /// <remarks>
-        /// The percentage is bracketed by parentheses.
-        /// </remarks>
-        public static InputValue<Percentage> ReadPercentage(StringReader reader,
-                                                            out int      index)
-        {
-            TextReader.SkipWhitespace(reader);
-            index = reader.Index;
-            int nextChar = reader.Peek();
-
-            if (nextChar == -1)
-            {
-                throw new InputValueException();  // Missing value
-            }
-            if(nextChar != '(')
-            {
-                throw MakeInputValueException(TextReader.ReadWord(reader),
-                                                "Value does not start with \"(\"");
-            }
-
-            StringBuilder valueAsStr = new StringBuilder();
-            valueAsStr.Append((char) (reader.Read()));
-
-            //  Read whitespace between '(' and percentage
-            valueAsStr.Append(ReadWhitespace(reader));
-
-            //  Read percentage
-            string word = ReadWord(reader, ')');
-            if (word == "")
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              "No percentage after \"(\"");
-            valueAsStr.Append(word);
-            Percentage percentage;
-            try {
-                percentage = Percentage.Parse(word);
-            }
-            catch (System.FormatException exc) {
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              exc.Message);
-            }
-            if (percentage.Value < 0.0 || percentage.Value > 1)
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              string.Format("{0} is not between 0% and 100%.", word));
-
-            //  Read whitespace and ')'
-            valueAsStr.Append(ReadWhitespace(reader));
-            char? ch = TextReader.ReadChar(reader);
-            if (! ch.HasValue)
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              "Missing \")\"");
-            valueAsStr.Append(ch.Value);
-            if (ch != ')')
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              string.Format("Value ends with \"{0}\" instead of \")\"", ch));
-
-            return new InputValue<Percentage>(percentage, valueAsStr.ToString());
-        }
 
         //---------------------------------------------------------------------
 
@@ -235,7 +207,7 @@ namespace Landis.Library.DensityHarvest
         /// <remarks>
         /// The optional percentage is bracketed by parenthesis.
         /// </remarks>
-        public static InputValue<AgeRange> ReadAgeOrRange(StringReader reader,
+        public static InputValue<DiameterRange> ReadDiameterRange(StringReader reader,
                                                           out int      index)
         {
             TextReader.SkipWhitespace(reader);
@@ -245,21 +217,21 @@ namespace Landis.Library.DensityHarvest
             if (word == "")
                 throw new InputValueException();  // Missing value
 
-            AgeRange ageRange = AgeRangeParsing.ParseAgeOrRange(word);
+            DiameterRange diameterRange = DiameterRangeParsing.ParseDiameterRange(word);
 
-            //  Does a percentage follow?
+            //  Does a residual follow?
             TextReader.SkipWhitespace(reader);
             if (reader.Peek() == '(') {
 
-                InputValue<uint> removal = ReadTreeRemoval(reader);
+                InputValue<Tuple<string, float>> residual = ReadResidual(reader);
 
-                if (removal.String != "(100%)")
+                if (residual.String != "(100%)")
                 {
-                    treeremovals[ageRange.Start] = removal;
+                    residualBasal[diameterRange.Start] = residual;
                 }
             }
 
-            return new InputValue<AgeRange>(ageRange, word);
+            return new InputValue<DiameterRange>(diameterRange, word);
         }
 
         //---------------------------------------------------------------------
@@ -275,15 +247,15 @@ namespace Landis.Library.DensityHarvest
         /// there were no percentages read for any age or range.
         /// </returns>
         public static bool CreateCohortSelectorFor(ISpecies species,
-                                                   IList<ushort> ages,
-                                                   IList<AgeRange> ageRanges)
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
-            if (treeremovals.Count == 0)
+            if (residualBasal.Count == 0)
                 return false;
             else
             {
-                CohortSelectors[species] = new SpecificAgesCohortSelector(ages, ageRanges, treeremovals);
-                treeremovals.Clear();
+                CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges, residualBasal);
+                residualBasal.Clear();
                 return true;
             }
         }
@@ -299,15 +271,15 @@ namespace Landis.Library.DensityHarvest
         /// there were no percentages read for any age or range.
         /// </returns>
         public static bool CreateAdditionalCohortSelectorFor(ISpecies species,
-                                                   IList<ushort> ages,
-                                                   IList<AgeRange> ageRanges)
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
-            if (treeremovals.Count == 0)
+            if (residualBasal.Count == 0)
                 return false;
             else
             {
-                AdditionalCohortSelectors[species] = new SpecificAgesCohortSelector(ages, ageRanges, treeremovals);
-                treeremovals.Clear();
+                AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges, residualBasal);
+                residualBasal.Clear();
                 return true;
             }
         }
@@ -325,9 +297,9 @@ namespace Landis.Library.DensityHarvest
             {
                 AdditionalCohortSelectors.Clear();
             }
-            if (treeremovals != null)
+            if (residualBasal != null)
             {
-                treeremovals.Clear();
+                residualBasal.Clear();
             }
         }
     }

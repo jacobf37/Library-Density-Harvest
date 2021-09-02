@@ -1,6 +1,8 @@
-﻿using Landis.Core;
+﻿// This file is part of the Harvest Management library for LANDIS-II.
 
-namespace Landis.Library.DensitySiteHarvest
+using Landis.Core;
+
+namespace Landis.Library.DensityHarvestManagement
 {
     internal static class Model
     {

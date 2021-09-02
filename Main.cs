@@ -1,6 +1,6 @@
 ﻿using Landis.Core;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// Main entry point for initializing and configuring the library.

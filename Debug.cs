@@ -2,7 +2,7 @@
 using Landis.SpatialModeling;
 using log4net;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// Helper methods for logging debug information

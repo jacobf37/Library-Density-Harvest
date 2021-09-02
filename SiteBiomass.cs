@@ -3,7 +3,7 @@ using Landis.Library.DensityCohorts;
 using log4net;
 using System.Collections.Generic;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// Records the biomass harvested for each species at the current site.

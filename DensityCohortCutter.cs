@@ -1,12 +1,11 @@
 ﻿using Landis.Utilities;
 using Landis.Core;
 using Landis.Library.DensityCohorts;
-using Landis.Library.BiomassCohorts;
-using Landis.Library.SiteHarvest;
+using Landis.Library.DensitySiteHarvest;
 using Landis.SpatialModeling;
 using log4net;
 
-namespace Landis.Library.DensityHarvest
+namespace Landis.Library.DensitySiteHarvest
 {
     /// <summary>
     /// A disturbance where at least one species is partially thinned (i.e.,
@@ -20,28 +19,40 @@ namespace Landis.Library.DensityHarvest
     /// removed (i.e., a percentage was specified for at least one age or age
     /// range).
     /// </remarks>
-    public class PartialCohortCutter
-        : WholeCohortCutter, DensityCohorts.IDisturbance
+    public class DensityCohortCutter
+        : ICohortCutter, DensityCohorts.IDisturbance
     {
-        private static readonly ILog log = LogManager.GetLogger(typeof(PartialCohortCutter));
+        private static readonly ILog log = LogManager.GetLogger(typeof(DensityCohortCutter));
         private static readonly bool isDebugEnabled = log.IsDebugEnabled;
 
-        private PartialCohortSelectors partialCohortSelectors;
+        private DensityCohortSelectors densityCohortSelectors;
         private CohortCounts cohortCounts;
         private CohortCounts partialCohortCounts;
 
+        /// <summary>
+        /// What type of disturbance is this.
+        /// </summary>
+        public ExtensionType Type { get; protected set; }
+
+        /// <summary>
+        /// The site currently that the disturbance is impacting.
+        /// </summary>
+        public ActiveSite CurrentSite { get; protected set; }
+
+        public ICohortSelector CohortSelector { get; protected set; }
         //---------------------------------------------------------------------
 
         /// <summary>
         /// Creates a new instance.
         /// </summary>
-        public PartialCohortCutter(Landis.Library.SiteHarvest.ICohortSelector cohortSelector,
-                                   PartialCohortSelectors                     partialCohortSelectors,
+        public DensityCohortCutter(ICohortSelector cohortSelector,
+                                   DensityCohortSelectors densityCohortSelectors,
                                    ExtensionType                              extensionType)
-            : base(cohortSelector, extensionType)
+           
         {
-            this.partialCohortSelectors = new PartialCohortSelectors(partialCohortSelectors);
+            this.densityCohortSelectors = new DensityCohortSelectors(densityCohortSelectors);
             partialCohortCounts = new CohortCounts();
+            Type = extensionType;
         }
 
         //---------------------------------------------------------------------
@@ -50,7 +61,7 @@ namespace Landis.Library.DensityHarvest
         {
             int reduction = 0;
             SpecificAgesCohortSelector specificAgeCohortSelector;
-            if (partialCohortSelectors.TryGetValue(cohort.Species, out specificAgeCohortSelector))
+            if (densityCohortSelectors.TryGetValue(cohort.Species, out specificAgeCohortSelector))
             {
                 uint removal;
                 if (specificAgeCohortSelector.Selects(cohort, out removal))
@@ -72,7 +83,7 @@ namespace Landis.Library.DensityHarvest
         /// <summary>
         /// Cuts the cohorts at a site.
         /// </summary>
-        public override void Cut(ActiveSite   site,
+        public void Cut(ActiveSite   site,
                                  CohortCounts cohortCounts)
         {
             if (isDebugEnabled)
@@ -86,9 +97,10 @@ namespace Landis.Library.DensityHarvest
             // Use age-only cohort selectors to harvest whole cohorts
             // Note: the base method sets the CurrentSite property, and resets
             // the counts to 0 before cutting.
-            base.Cut(site, cohortCounts);
+            //base.Cut(site, cohortCounts);
 
             // Then do any partial harvesting with the partial cohort selectors.
+            CurrentSite = site;
             this.cohortCounts = cohortCounts;
             SiteVars.Cohorts[site].ReduceOrKillDensityCohorts(this);
 
