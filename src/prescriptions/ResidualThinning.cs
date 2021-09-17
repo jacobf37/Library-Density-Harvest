@@ -19,7 +19,7 @@ namespace Landis.Library.DensitySiteHarvest
         public static DensityCohortSelectors CohortSelectors { get; private set; }
         public static DensityCohortSelectors AdditionalCohortSelectors { get; private set; }
         private static IDictionary<float, Tuple<string, float>> residualBasal;
-        private static string removalOrder;
+
 
         //---------------------------------------------------------------------
 
@@ -28,7 +28,7 @@ namespace Landis.Library.DensitySiteHarvest
             // Force the harvest library to register its read method for age
             // ranges.  Then replace it with this project's read method that
             // handles percentages for partial thinning.
-            AgeRangeParsing.InitializeClass();
+            DiameterRangeParsing.InitializeClass();
             InputValues.Register<DiameterRange>(ResidualThinning.ReadDiameterRange);
             residualBasal = new Dictionary<float, Tuple<string, float>>();
             CohortSelectors = new DensityCohortSelectors();

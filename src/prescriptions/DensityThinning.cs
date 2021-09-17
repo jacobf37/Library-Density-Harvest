@@ -1,4 +1,4 @@
-/*using Landis.Utilities;
+using Landis.Utilities;
 using Landis.Core;
 using System.Collections.Generic;
 using System.Text;
@@ -25,8 +25,8 @@ namespace Landis.Library.DensitySiteHarvest
             // Force the harvest library to register its read method for age
             // ranges.  Then replace it with this project's read method that
             // handles percentages for partial thinning.
-            AgeRangeParsing.InitializeClass();
-            InputValues.Register<AgeRange>(DensityThinning.ReadAgeOrRange);
+            DiameterRangeParsing.InitializeClass();
+            InputValues.Register<DiameterRange>(DensityThinning.ReadDiameterRange);
             treeremovals = new Dictionary<ushort, uint>();
             CohortSelectors = new DensityCohortSelectors();
             AdditionalCohortSelectors = new DensityCohortSelectors();
@@ -126,67 +126,7 @@ namespace Landis.Library.DensitySiteHarvest
 
         //---------------------------------------------------------------------
 
-        /// <summary>
-        /// Reads a percentage for partial thinning of a cohort age or age
-        /// range.
-        /// </summary>
-        /// <remarks>
-        /// The percentage is bracketed by parentheses.
-        /// </remarks>
-        public static InputValue<Percentage> ReadPercentage(StringReader reader,
-                                                            out int      index)
-        {
-            TextReader.SkipWhitespace(reader);
-            index = reader.Index;
-            int nextChar = reader.Peek();
 
-            if (nextChar == -1)
-            {
-                throw new InputValueException();  // Missing value
-            }
-            if(nextChar != '(')
-            {
-                throw MakeInputValueException(TextReader.ReadWord(reader),
-                                                "Value does not start with \"(\"");
-            }
-
-            StringBuilder valueAsStr = new StringBuilder();
-            valueAsStr.Append((char) (reader.Read()));
-
-            //  Read whitespace between '(' and percentage
-            valueAsStr.Append(ReadWhitespace(reader));
-
-            //  Read percentage
-            string word = ReadWord(reader, ')');
-            if (word == "")
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              "No percentage after \"(\"");
-            valueAsStr.Append(word);
-            Percentage percentage;
-            try {
-                percentage = Percentage.Parse(word);
-            }
-            catch (System.FormatException exc) {
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              exc.Message);
-            }
-            if (percentage.Value < 0.0 || percentage.Value > 1)
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              string.Format("{0} is not between 0% and 100%.", word));
-
-            //  Read whitespace and ')'
-            valueAsStr.Append(ReadWhitespace(reader));
-            char? ch = TextReader.ReadChar(reader);
-            if (! ch.HasValue)
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              "Missing \")\"");
-            valueAsStr.Append(ch.Value);
-            if (ch != ')')
-                throw MakeInputValueException(valueAsStr.ToString(),
-                                              string.Format("Value ends with \"{0}\" instead of \")\"", ch));
-
-            return new InputValue<Percentage>(percentage, valueAsStr.ToString());
-        }
 
         //---------------------------------------------------------------------
 
@@ -227,15 +167,8 @@ namespace Landis.Library.DensitySiteHarvest
 
         //---------------------------------------------------------------------
 
-        /// <summary>
-        /// Reads a cohort age or a range of ages (format: age-age) followed
-        /// by an optional percentage for partial thinning.
-        /// </summary>
-        /// <remarks>
-        /// The optional percentage is bracketed by parenthesis.
-        /// </remarks>
-        public static InputValue<AgeRange> ReadAgeOrRange(StringReader reader,
-                                                          out int      index)
+        public static InputValue<DiameterRange> ReadDiameterRange(StringReader reader,
+                                                          out int index)
         {
             TextReader.SkipWhitespace(reader);
             index = reader.Index;
@@ -244,21 +177,10 @@ namespace Landis.Library.DensitySiteHarvest
             if (word == "")
                 throw new InputValueException();  // Missing value
 
-            AgeRange ageRange = AgeRangeParsing.ParseAgeOrRange(word);
+            DiameterRange diameterRange = DiameterRangeParsing.ParseDiameterRange(word);
 
-            //  Does a percentage follow?
-            TextReader.SkipWhitespace(reader);
-            if (reader.Peek() == '(') {
 
-                InputValue<uint> removal = ReadTreeRemoval(reader);
-
-                if (removal.String != "(100%)")
-                {
-                    treeremovals[ageRange.Start] = removal;
-                }
-            }
-
-            return new InputValue<AgeRange>(ageRange, word);
+            return new InputValue<DiameterRange>(diameterRange, word);
         }
 
         //---------------------------------------------------------------------
@@ -274,17 +196,12 @@ namespace Landis.Library.DensitySiteHarvest
         /// there were no percentages read for any age or range.
         /// </returns>
         public static bool CreateCohortSelectorFor(ISpecies species,
-                                                   IList<ushort> ages,
-                                                   IList<AgeRange> ageRanges)
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
-            if (treeremovals.Count == 0)
-                return false;
-            else
-            {
-                CohortSelectors[species] = new DiameterCohortSelector(ages, ageRanges, treeremovals);
-                treeremovals.Clear();
-                return true;
-            }
+
+            CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
+            return true;
         }
 
         /// <summary>
@@ -298,17 +215,11 @@ namespace Landis.Library.DensitySiteHarvest
         /// there were no percentages read for any age or range.
         /// </returns>
         public static bool CreateAdditionalCohortSelectorFor(ISpecies species,
-                                                   IList<ushort> ages,
-                                                   IList<AgeRange> ageRanges)
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
-            if (treeremovals.Count == 0)
-                return false;
-            else
-            {
-                AdditionalCohortSelectors[species] = new SpecificAgesCohortSelector(ages, ageRanges, treeremovals);
-                treeremovals.Clear();
-                return true;
-            }
+            AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
+            return true;
         }
 
         /// <summary>
@@ -331,4 +242,3 @@ namespace Landis.Library.DensitySiteHarvest
         }
     }
 }
-*/

@@ -1,4 +1,4 @@
-﻿
+﻿/*
 using Landis.Core;
 
 namespace Landis.Library.DensitySiteHarvest
@@ -24,9 +24,9 @@ namespace Landis.Library.DensitySiteHarvest
             ICohortCutter cohortCutter;
 
             cohortCutter = new DensityCohortCutter(cohortSelector,
-                                                    DensityThinning.CohortSelectors,
+                                                    ResidualThinning.CohortSelectors,
                                                     extensionType);
-            DensityThinning.ClearCohortSelectors();
+            ResidualThinning.ClearCohortSelectors();
 
             return cohortCutter;
         }
@@ -46,11 +46,12 @@ namespace Landis.Library.DensitySiteHarvest
             ICohortCutter cohortCutter;
 
             cohortCutter = new DensityCohortCutter(cohortSelector,
-                                                    DensityThinning.AdditionalCohortSelectors,
+                                                    ResidualThinning.AdditionalCohortSelectors,
                                                     extensionType);
-            DensityThinning.ClearCohortSelectors();
+            ResidualThinning.ClearCohortSelectors();
 
             return cohortCutter;
         }
     }
 }
+*/

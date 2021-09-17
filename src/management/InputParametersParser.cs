@@ -26,6 +26,7 @@ namespace Landis.Library.DensityHarvestManagement
         private List<List<string>> parserNotes;
         private static int scenarioStart = 0;
         private static int scenarioEnd = Model.Core.EndTime;
+
         private static class Names
         {
             public const string HarvestImplementations = "HarvestImplementations";
@@ -241,9 +242,21 @@ namespace Landis.Library.DensityHarvestManagement
 
                 bool preventEstablishment  = ReadPreventEstablishment();
 
+                InputVar<float> residualBasal = new InputVar<float>("ResidualBasal");
+
+                ReadVar(residualBasal);
+
+                InputVar<string> removalOrder = new InputVar<string>("RemovalOrder");
+
+                ReadVar(removalOrder);
+
+                //JSF - Error checking for removal order
+
+                (string, float) removalInfo = (removalOrder.Value, residualBasal.Value);
+
                 ICohortSelector cohortSelector = ReadCohortSelector(false);
 
-                ICohortCutter cohortCutter = CreateCohortCutter(cohortSelector);
+                ICohortCutter cohortCutter = CreateCohortCutter(cohortSelector, removalInfo);
 
                 Planting.SpeciesList speciesToPlant = ReadSpeciesToPlant();
 
@@ -254,8 +267,11 @@ namespace Landis.Library.DensityHarvestManagement
                     int interval = ValidateRepeatInterval(singleRepeat.Value,
                                                           repeatParamLineNumber,
                                                           harvestTimestep);
+                    ReadVar(residualBasal);
+                    ReadVar(removalOrder);
+                    (string, float) additionalRemovalInfo = (removalOrder.Value, residualBasal.Value);
                     ICohortSelector additionalCohortSelector = ReadCohortSelector(true);
-                    ICohortCutter additionalCohortCutter = CreateAdditionalCohortCutter(additionalCohortSelector);
+                    ICohortCutter additionalCohortCutter = CreateAdditionalCohortCutter(additionalCohortSelector, additionalRemovalInfo);
                     Planting.SpeciesList additionalSpeciesToPlant = ReadSpeciesToPlant();
                     prescriptions.Add(new SingleRepeatHarvest(name,
                                                               rankingMethod,
@@ -803,9 +819,6 @@ namespace Landis.Library.DensityHarvestManagement
             InputVar<string> cohortSelection = new InputVar<string>("CohortsRemoved");
             ReadVar(cohortSelection);
 
-            InputVar<string> removalOrder = new InputVar<string>("RemovalOrder");
-            ReadVar(removalOrder);
-
             if (cohortSelection.Value.Actual == "ClearCut")
                 return new ClearCut();
 
@@ -852,9 +865,9 @@ namespace Landis.Library.DensityHarvestManagement
         /// so it can determine whether to create a PartialCohortCutter or a
         /// WholeCohortCutter.
         /// </remarks>
-        protected virtual ICohortCutter CreateCohortCutter(ICohortSelector cohortSelector)
+        protected virtual ICohortCutter CreateCohortCutter(ICohortSelector cohortSelector, (string, float) removalInfo)
         {
-            return new DensityCohortCutter(cohortSelector, DensityThinning.CohortSelectors, HarvestExtensionMain.ExtType);
+            return new DensityCohortCutter(cohortSelector, removalInfo, ResidualThinning.CohortSelectors, HarvestExtensionMain.ExtType);
         }
 
         /// <summary>
@@ -866,9 +879,9 @@ namespace Landis.Library.DensityHarvestManagement
         /// so it can determine whether to create a PartialCohortCutter or a
         /// WholeCohortCutter.
         /// </remarks>
-        protected virtual ICohortCutter CreateAdditionalCohortCutter(ICohortSelector cohortSelector)
+        protected virtual ICohortCutter CreateAdditionalCohortCutter(ICohortSelector cohortSelector, (string, float) removalInfo)
         {
-            return new DensityCohortCutter(cohortSelector, DensityThinning.CohortSelectors, HarvestExtensionMain.ExtType);
+            return new DensityCohortCutter(cohortSelector, removalInfo, ResidualThinning.CohortSelectors, HarvestExtensionMain.ExtType);
         }
 
         //---------------------------------------------------------------------

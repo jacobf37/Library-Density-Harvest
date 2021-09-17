@@ -16,7 +16,7 @@ namespace Landis.Library.DensitySiteHarvest
 
             Model.Core = modelCore;
             SiteVars.Initialize();
-            DensityThinning.InitializeClass();
+            ResidualThinning.InitializeClass();
         }
     }
 }

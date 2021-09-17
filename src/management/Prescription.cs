@@ -201,6 +201,7 @@ namespace Landis.Library.DensityHarvestManagement
             this.rankingMethod = rankingMethod;
             this.siteSelector = siteSelector;
             this.cohortCutter = cohortCutter;
+             
             this.speciesToPlant = speciesToPlant;
             this.minTimeSinceDamage = minTimeSinceDamage;
             this.preventEstablishment = preventEstablishment;
@@ -235,6 +236,10 @@ namespace Landis.Library.DensityHarvestManagement
             //set current stand
             currentStand = stand;
             currentStand.ClearDamageTable();
+
+            DensityCohortCutter currentCutter = (DensityCohortCutter)this.cohortCutter;
+            
+            
 
             // SelectSites(stand) is where either complete, complete stand spreading, or partial stand
             // spreading are activated.

@@ -2,6 +2,7 @@
 using Landis.Core;
 using Landis.Library.DensityCohorts;
 using Landis.Library.DensitySiteHarvest;
+using System;
 using Landis.SpatialModeling;
 using log4net;
 
@@ -28,7 +29,7 @@ namespace Landis.Library.DensitySiteHarvest
         private DensityCohortSelectors densityCohortSelectors;
         private CohortCounts cohortCounts;
         private CohortCounts partialCohortCounts;
-
+        private (string removalOrder, float residualBasal) removalMethod;
         /// <summary>
         /// What type of disturbance is this.
         /// </summary>
@@ -40,17 +41,35 @@ namespace Landis.Library.DensitySiteHarvest
         public ActiveSite CurrentSite { get; protected set; }
 
         public ICohortSelector CohortSelector { get; protected set; }
+
+        public string RemovalOrder
+        {
+            get
+            {
+                return removalMethod.removalOrder;
+            }
+        }
+
+        public float ResidualBasal
+        {
+            get
+            {
+                return removalMethod.residualBasal;
+            }
+        }
         //---------------------------------------------------------------------
 
         /// <summary>
         /// Creates a new instance.
         /// </summary>
         public DensityCohortCutter(ICohortSelector cohortSelector,
+                                   (string, float) removalInfo,
                                    DensityCohortSelectors densityCohortSelectors,
                                    ExtensionType                              extensionType)
            
         {
             this.densityCohortSelectors = new DensityCohortSelectors(densityCohortSelectors);
+            this.removalMethod = removalInfo;
             partialCohortCounts = new CohortCounts();
             Type = extensionType;
         }
@@ -60,7 +79,7 @@ namespace Landis.Library.DensitySiteHarvest
         int Landis.Library.DensityCohorts.IDisturbance.ReduceOrKillMarkedCohort(Landis.Library.DensityCohorts.ICohort cohort)
         {
             int reduction = 0;
-            SpecificAgesCohortSelector specificAgeCohortSelector;
+            DiameterCohortSelector specificAgeCohortSelector;
             if (densityCohortSelectors.TryGetValue(cohort.Species, out specificAgeCohortSelector))
             {
                 uint removal;
