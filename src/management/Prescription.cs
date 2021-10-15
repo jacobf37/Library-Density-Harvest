@@ -238,8 +238,8 @@ namespace Landis.Library.DensityHarvestManagement
             currentStand.ClearDamageTable();
 
             DensityCohortCutter currentCutter = (DensityCohortCutter)this.cohortCutter;
-            
-            
+
+            stand.DistributeBasalRemoval(currentCutter);
 
             // SelectSites(stand) is where either complete, complete stand spreading, or partial stand
             // spreading are activated.

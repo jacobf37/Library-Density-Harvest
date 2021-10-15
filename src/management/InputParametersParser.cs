@@ -351,22 +351,23 @@ namespace Landis.Library.DensityHarvestManagement
             
             if (rankingName.Value.Actual == "BasalArea")
                 rankingMethod = new BasalAreaRank();
-            
-/*            if (rankingName.Value.Actual == "Economic")
-                rankingMethod = new EconomicRank(ReadEconomicRankTable());
-            else if (rankingName.Value.Actual == "MaxCohortAge")
-                rankingMethod = new MaxCohortAge();
             else if (rankingName.Value.Actual == "Random")
                 rankingMethod = new RandomRank();
-            else if (rankingName.Value.Actual == "RegulateAges")
-                rankingMethod = new RegulateAgesRank();
-            else if (rankingName.Value.Actual == "FireHazard")
-                rankingMethod = new FireRiskRank(ReadFireRiskTable());
-            else if (rankingName.Value.Actual == "TimeSinceDisturbance")
-            {
-                rankingMethod = new TimeSinceDisturbanceRank();
-                check = true;
-            }*/
+            /*            if (rankingName.Value.Actual == "Economic")
+                            rankingMethod = new EconomicRank(ReadEconomicRankTable());
+                        else if (rankingName.Value.Actual == "MaxCohortAge")
+                            rankingMethod = new MaxCohortAge();
+                        else if (rankingName.Value.Actual == "Random")
+                            rankingMethod = new RandomRank();
+                        else if (rankingName.Value.Actual == "RegulateAges")
+                            rankingMethod = new RegulateAgesRank();
+                        else if (rankingName.Value.Actual == "FireHazard")
+                            rankingMethod = new FireRiskRank(ReadFireRiskTable());
+                        else if (rankingName.Value.Actual == "TimeSinceDisturbance")
+                        {
+                            rankingMethod = new TimeSinceDisturbanceRank();
+                            check = true;
+                        }*/
 
             ////list of ranking methods which have not been implemented yet
             //else if ((rankingName.Value.Actual == "SpeciesBiomass") ||
@@ -867,7 +868,7 @@ namespace Landis.Library.DensityHarvestManagement
         /// </remarks>
         protected virtual ICohortCutter CreateCohortCutter(ICohortSelector cohortSelector, (string, float) removalInfo)
         {
-            return new DensityCohortCutter(cohortSelector, removalInfo, ResidualThinning.CohortSelectors, HarvestExtensionMain.ExtType);
+            return new DensityCohortCutter(cohortSelector, removalInfo, HarvestExtensionMain.ExtType);
         }
 
         /// <summary>
@@ -881,7 +882,7 @@ namespace Landis.Library.DensityHarvestManagement
         /// </remarks>
         protected virtual ICohortCutter CreateAdditionalCohortCutter(ICohortSelector cohortSelector, (string, float) removalInfo)
         {
-            return new DensityCohortCutter(cohortSelector, removalInfo, ResidualThinning.CohortSelectors, HarvestExtensionMain.ExtType);
+            return new DensityCohortCutter(cohortSelector, removalInfo, HarvestExtensionMain.ExtType);
         }
 
         //---------------------------------------------------------------------

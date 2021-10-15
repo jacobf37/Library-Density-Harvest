@@ -250,11 +250,11 @@ namespace Landis.Library.DensitySiteHarvest
                                                    IList<float> diameters,
                                                    IList<DiameterRange> diameterRanges)
         {
-            if (residualBasal.Count == 0)
-                return false;
-            else
+            //if (residualBasal.Count == 0)
+            //    return false;
+            //else
             {
-                CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges, residualBasal);
+                CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
                 residualBasal.Clear();
                 return true;
             }
@@ -278,7 +278,7 @@ namespace Landis.Library.DensitySiteHarvest
                 return false;
             else
             {
-                AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges, residualBasal);
+                AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
                 residualBasal.Clear();
                 return true;
             }

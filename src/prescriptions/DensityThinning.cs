@@ -200,7 +200,7 @@ namespace Landis.Library.DensitySiteHarvest
                                                    IList<DiameterRange> diameterRanges)
         {
 
-            CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
+            //CohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
             return true;
         }
 
@@ -218,7 +218,7 @@ namespace Landis.Library.DensitySiteHarvest
                                                    IList<float> diameters,
                                                    IList<DiameterRange> diameterRanges)
         {
-            AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
+            //AdditionalCohortSelectors[species] = new DiameterCohortSelector(diameters, diameterRanges);
             return true;
         }
 

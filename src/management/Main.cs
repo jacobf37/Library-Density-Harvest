@@ -17,7 +17,7 @@ namespace Landis.Library.DensityHarvestManagement
         /// </param>
         public static void InitializeLib(ICore modelCore)
         {
-            Landis.Library.SiteHarvest.Main.InitializeLib(modelCore);
+            Landis.Library.DensitySiteHarvest.Main.InitializeLib(modelCore);
             Model.Core = modelCore;
             SiteVars.Initialize();
         }

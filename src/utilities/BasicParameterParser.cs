@@ -158,7 +158,7 @@ namespace Landis.Library.DensitySiteHarvest
                     TextReader.SkipWhitespace(currentLine);
                 }
 
-                ResidualThinning.CreateCohortSelectorFor(species, diameters, ranges);
+                CreateCohortSelectorFor(species, diameters, ranges);
                 
                 GetNextLine();
             }
@@ -173,7 +173,7 @@ namespace Landis.Library.DensitySiteHarvest
             else
             {
                 return densitySelector;
-                ;
+                
             }
 
         }
@@ -353,14 +353,14 @@ namespace Landis.Library.DensitySiteHarvest
         /// handling of ages and ranges (for example, percentages for partial
         /// harvesting in biomass extensions).
         /// </remarks>
-        protected virtual void CreateCohortSelectionMethodFor(ISpecies species,
-                                                              IList<ushort> ages,
-                                                              IList<AgeRange> ranges)
+        protected virtual void CreateCohortSelectorFor(ISpecies species,
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
             //if (!DensityThinning.CreateCohortSelectorFor(species, ages, ranges))
             {
                 //JSF - FIXME
-                //cohortSelector[species] = new SpecificAgesCohortSelector(ages, ranges).SelectCohorts;
+                densitySelector[species] = new DiameterCohortSelector(diameters, diameterRanges);
             }
         }
         /// <summary>
@@ -373,11 +373,11 @@ namespace Landis.Library.DensitySiteHarvest
         /// harvesting in biomass extensions).
         /// </remarks>
         protected virtual void CreateAdditionalCohortSelectionMethodFor(ISpecies species,
-                                                              IList<ushort> ages,
-                                                              IList<AgeRange> ranges)
+                                                   IList<float> diameters,
+                                                   IList<DiameterRange> diameterRanges)
         {
             //DensityThinning.CreateAdditionalCohortSelectorFor(species, ages, ranges);
-            //additionalCohortSelector[species] = new SpecificAgesCohortSelector(ages, ranges).SelectCohorts;
+            additionalDensitySelector[species] = new DiameterCohortSelector(diameters, diameterRanges);
         }
 
         //---------------------------------------------------------------------

@@ -97,6 +97,7 @@ namespace Landis.Library.DensityHarvestManagement
             //Model.Core.RegisterSiteVar(SiteVars.Prescription, "Harvest.PrescriptionName");
             Model.Core.RegisterSiteVar(SiteVars.TimeOfLastEvent, "Harvest.TimeOfLastEvent");
             Model.Core.RegisterSiteVar(SiteVars.CohortsDamaged, "Harvest.CohortsDamaged");
+            Model.Core.RegisterSiteVar(Stand, "Harvest.Stand");
 
             SiteVars.TimeOfLastEvent.ActiveSiteValues = -100;
             SiteVars.Prescription.SiteValues = null;

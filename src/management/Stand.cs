@@ -52,6 +52,8 @@ namespace Landis.Library.DensityHarvestManagement
         public double LastAreaHarvested;
         public int LastStandsHarvested;
 
+        private Dictionary<ActiveSite, double> siteRemovalShare;
+
         //---------------------------------------------------------------------
 
         /// <summary>
@@ -458,6 +460,7 @@ namespace Landis.Library.DensityHarvestManagement
             this.setAsideSites = new Dictionary<string, List<Location>>();
             this.repeatNumber = 0;
             this.repeatHarvested = false;
+            this.siteRemovalShare = new Dictionary<ActiveSite, double>();
         }
 
         //---------------------------------------------------------------------
@@ -672,6 +675,37 @@ namespace Landis.Library.DensityHarvestManagement
             }
 
             return (standBasalArea / this.ActiveArea);
+        }
+
+        //---------------------------------------------------------------------
+
+        public void DistributeBasalRemoval(DensityCohortCutter currentCutter)
+        {
+
+            double baRemoval = this.BasalArea - currentCutter.ResidualBasal;
+
+            foreach (ActiveSite site in this)
+            {
+                double siteBA = 0;
+                foreach (ISpeciesCohorts speciesCohorts in SiteVars.Cohorts[site])
+                {
+                    foreach (ICohort cohort in speciesCohorts)
+                    {
+                        siteBA += cohort.ComputeCohortBasalArea(cohort);
+                    }
+                }
+                // Convert BA to per hectare units
+                siteBA = siteBA / Model.Core.CellArea;
+                double cutBA = siteBA / this.BasalArea * baRemoval;
+                this.siteRemovalShare[site] = cutBA;
+            }
+        }
+
+        //---------------------------------------------------------------------
+
+        public double SiteRemovalShare(ActiveSite site)
+        {
+            return this.siteRemovalShare[site];
         }
     }
 } // namespace Landis.Extensions.Harvest
